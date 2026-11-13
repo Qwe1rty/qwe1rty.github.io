@@ -8,10 +8,14 @@
 {{- end }}
 {{- if $img }}
   {{- if eq $img.MediaType.SubType "svg" }}
-    {{- /* Vector formats can't be resized or measured (no Width/Height methods
-           on non-raster resources) — serve as-is. */}}
+    {{- /* Vector formats can't be resized or measured */}}
+    {{- $svg := $img.Content
+      | replaceRE "light-dark\\(\\s*#[0-9a-fA-F]+\\s*,\\s*var\\(--ge-light-color,\\s*#[0-9a-fA-F]+\\s*\\)\\)" "#000000"
+      | replaceRE "color-scheme:\\s*light dark\\s*;?" ""
+      | replaceRE "var\\(--ge-adaptive-fg,\\s*#000000\\)" "#000000"
+      | resources.FromString (path.Join (path.Dir $img.RelPermalink) (path.Base $img.Name)) }}
 <img
-  src="{{ $img.RelPermalink }}"
+  src="{{ $svg.RelPermalink }}"
   alt="{{ .PlainText }}"
   {{- with .Title }} title="{{ . }}"{{ end }}
   loading="lazy" decoding="async">

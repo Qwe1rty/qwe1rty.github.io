@@ -7,11 +7,11 @@ summary = 'How does decentralized consensus work?'
 tags = ['databases']
 +++
 
-Most production database systems use leader-based protocols for linearizability. But leaderless protocols are gaining popularity, like Tencent PaxosStore and the upcoming Casandra 6.
+Most production database systems use leader-based protocols for linearizability. But leaderless protocols are gaining popularity, like Tencent PaxosStore and the upcoming Cassandra 6.
 
 I decided to check out one of the originals, EPaxos[^1], to get a deeper sense of how it works.
 
-# The Sequencing Problem
+# The sequencing problem
 
 Leader-based sequencing during normal operation is generally straightforward, its role is to assign unique incrementing (epoch, ballot) numbers to every request. This provides a performance benefit as well as simplifying the log. If there's two requests that modify the same entries, the leader arbitrates an ordering and broadcasts it globally.
 
@@ -51,7 +51,7 @@ Using the case where `req_a/req_b` are separately coordinated by R1 and R2, we g
 
 ![EPaxos ordering example 1 — SVG](images/epaxos-ordering-1.svg)
 
-Note that this ordering preaccept stage is NOT agreement based like the commit stages are. Even though it needs a quorum of responses, this doesn't imply any kind of agreement between them yet. Replies are tentative and it's expected that they may be overwritten. The coordinator's merging of deps/seq determines the value to agree on
+Note that this ordering preaccept stage is NOT agreement based like the commit stages are. Even though it needs a quorum of responses, this doesn't imply any kind of agreement between them yet. Replies are tentative and it's expected that they may be overwritten. The coordinator's merging of deps/seq determines the value to agree on does that
 
 Once ordering is determined and written to stable storage, the coordinator collects these tentative `PreAccept` views provided by each member and merges them, so that the max set of dependencies are included together. Then it follows the Paxos `Accept/Commit` rounds to replicate the merged deps/seq. This is the "slow path".
 ```
@@ -68,21 +68,21 @@ There's one special case to mention. Say that there's two concurrent requests,
 * Request R0.0 is proposed by R0, sent to R1,R2
 * Request R1.0 is proposed by R1, sent to R0,R2
 * Both requests write the same key
-* R2 is unable to reply due to network issues
+* R2 is unable to reply to either due to network issues
 
 At R1, when R0.0 is processed, R1 already has R1.0 for the same key and updates R0.0, replying with:
  ```text
-R0.0: seq=1, deps=[-1, 0, -1]
+R0.0 = (seq=1, deps=[-1, 0, -1])
  ```
 At R0, when R1.0 is processed, R0 already has R0.0 for the same key and updates R1.0, replying with:
  ```text
-R1.0: seq=1, deps=[0, -1, -1]
+R1.0 = (seq=1, deps=[0, -1, -1])
 ```
 
 At both R0/R1, the merged dependencies will appear to be:
 ```text
-R0.0: seq=1, deps=[-1, 0, -1]
-R1.0: seq=1, deps=[0, -1, -1]
+R0.0 = (seq=1, deps=[-1, 0, -1])
+R1.0 = (seq=1, deps=[0, -1, -1])
 ```
 
 Cycle! The sequence number is also equal with only 1 other conflicting event in both cases. The paper does acknowledge that it's possible for both deps/seq to be exactly equal, in which case the executor can choose to apply another arbitrary tie-breaker (that's deterministic and identical at every replica).
@@ -149,25 +149,25 @@ If the recoverer only receives preaccept replies back, it has to correctly deduc
 
 To illustrate, say that we have this configuration:
 * N = 9
-* R0 performs PreAccept(t) broadcast
-  * R0-R5 reply `PREACCEPT_EQ` with attributes t
-  * R6-R8 reply `PREACCEPT` with attributes t' (say R7-R8 missed information previously)
-* R0 performs Commit(t) locally through fast path
-* R0-R3 stall indefinitely, Commit(t) not broadcasted
+* R0 performs `PreAccept(v)` broadcast
+  * R0-R5 reply `PREACCEPT_EQ` with attributes `v`
+  * R6-R8 reply `PREACCEPT` with attributes `v'` (say R7-R8 missed information previously)
+* R0 performs `Commit(v)` locally through fast path
+* R0-R3 stall indefinitely, `Commit(v)` not broadcasted
 * R8 begins recovery process
   * R4-R8 forms recovery quorum
 
-If R8 ends up committing t', there's the risk of two diverging commits which should never happen. To avoid this, we see what the recovery quorum value `F + floor((F+1)/2)` is guaranteeing us:
+If R8 ends up committing `v'`, there's the risk of two diverging commits which should never happen. To avoid this, we see what the recovery quorum value `F + floor((F+1)/2)` is guaranteeing us:
 
 ![EPaxos optimized recovery, case 1.1 — SVG](images/epaxos-opt-case1-1.svg)
 
 The pigeonholing principle tells us that there **must** be at least an intersecting replica group `floor((F+1)/2) = 2` claiming `PREACCEPT_EQ`, present in both the fast path quorum and the recovery quorum.
 
-If the recovery quorum sees these identical entries, it **must** try to continue the recovery using t, explicitly overriding its earlier t'. This mandatory safety step prevents R8 from split-brain committing against what was committed earlier by R0.
+If the recovery quorum sees these identical entries, it **must** try to continue the recovery using `v`, explicitly overriding its earlier `v'`. This mandatory safety step prevents R8 from split-brain committing against what was committed earlier by R0.
 
 ![EPaxos optimized recovery, case 1.2 — SVG](images/epaxos-opt-case1-2.svg)
 
-If it only did the normal PreAccept + merge, then it may arrive at a value that isn't t.
+If it only did the normal preaccept and merge, then it may arrive at a value that isn't `v`.
 
 **Case 2: Recovery must check validity of original context's slow/fast path decision**
 
@@ -185,7 +185,7 @@ Seeing the `ACK(EQ)` from R1, it means there's a possibility of a fast commit. R
 
 **2.** Recall in our deps tracing that any two requests conflicting must have their deps established.
 
-When R3 sees the proposed `A=(5,{})` the first time, it checks it against its current knowledge of all other requests: B. It notices that both of them are in flight but neither are a dependency of each other. Which it can't determine is , and sends back `NACK`.
+When R3 sees the proposed `A=(5,{})` the first time, it checks it against its current knowledge of all other requests: B. It notices that both of them are in flight but neither are a dependency of each other. Which it can't certify is safe, and sends back `NACK`.
 
 Since they're both still in flight, R4's logical action is to simply wait it out. Once the information it receives changes, it can then know whether to proceed with this value or throw it away.
 

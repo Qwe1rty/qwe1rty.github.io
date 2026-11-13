@@ -16,7 +16,7 @@ defaultContentLanguage = 'en'
       unsafe = false
 
 [params]
-  theme = 'auto'          # auto: switch dark/light with system preference
+  theme = 'light'         # auto: switch dark/light with system preference
   palette = 'eink'        # alternates: default | dracula | solarized | catpuccin
   showPostsSummary = true
   showThemeNotice = false

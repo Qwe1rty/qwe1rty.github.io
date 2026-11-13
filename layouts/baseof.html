@@ -1,0 +1,58 @@
+{{- /* Site-level override of not-much's baseof.html. Changes vs the theme:
+       1. Bootstrap JS is the vendored assets/js/bootstrap.bundle.min.js
+          (deferred) instead of cdn.jsdelivr.net. Rationale: visitors whose
+          network blocks the CDN (ad-block DNS lists, regional blocks) got a
+          silently dead hamburger menu (collapse JS is that single script),
+          and it removes the last third-party site request. The integrity/
+          crossorigin attrs are dropped (same-origin, checksummed by builds).
+       2. Removed the dead <!-- <header> --> comment block.
+       Everything else is byte-identical. Re-check when switching themes. */}}
+<!DOCTYPE html>
+<html lang="{{ or site.Language.Locale site.Language.Lang }}" dir="{{ or site.Language.Direction `ltr` }}">
+<head>
+  {{ partial "head.html" . }}
+</head>
+{{ $theme := "dark" }}
+{{- with .Site.Params.theme }}
+  {{ $theme = . }}
+{{- end }}
+<body
+  {{- if eq $theme "dark" }}
+    class="dark"
+  {{- end }}
+>
+  <!-- <header>
+    {{ partial "header.html" . }}
+  </header> -->
+  <main>
+    {{ block "main" . }}{{ end }}
+  </main>
+
+  {{ if .Param "math" }}
+    {{ partial "math.html" . }}
+  {{ end }}
+  {{ with resources.Get "js/bootstrap.bundle.min.js" }}
+    <script src="{{ .RelPermalink }}" defer></script>
+  {{ end }}
+  {{- if eq $theme "auto" }}
+  <script>
+    function detectThemePreferences() {
+      let themeClasses = ["text-dark"];
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          themeClasses = ["text-light", "dark"];
+      }
+      document.body.classList.add(...themeClasses);
+    }
+
+    detectThemePreferences();
+  </script>
+  {{- end }}
+
+  {{ if .Site.Params.showFooterEverywhere}}
+    <footer>
+      {{ partial "footer.html" . }}
+    </footer>
+  {{ end }}
+
+</body>
+</html>

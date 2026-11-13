@@ -1,30 +1,16 @@
 # Hugo build & deploy for GitHub Pages.
 #
-# DRAFT MODE: manual-trigger only (workflow_dispatch) so pushes don't run it yet.
-#
-# Go-live checklist:
-#   1. Uncomment the `push` trigger below.
-#   2. Repo Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
-#   3. Push to main. The site goes live at https://qwe1rty.github.io/ (public).
-#
-# Notes:
-#   - Dart Sass is not installed here: the theme uses plain CSS.
-#   - Node.js step not needed: no package.json / package-lock.json in this repo.
-#   - Go install is conditional (only if go.mod exists, e.g. when using Hugo Modules).
-#   - Template steps that are provably inert for this repo are omitted: git history
-#     is already full at checkout (fetch-depth: 0), submodules are covered by the
-#     checkout input, and the image cache isn't worth it for a site this small
-#     (re-add cache restore/save + --cacheDir per gohugo.io docs if it grows).
+# Live at: https://qwe1rty.github.io/
 name: Build and deploy
 env:
   HUGO_VERSION: 0.169.0
   GO_VERSION: 1.27.3
   TZ: Etc/UTC
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
 permissions:
   contents: read
   pages: write
