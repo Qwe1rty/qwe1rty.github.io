@@ -6,8 +6,8 @@
 <link rel="icon" href="{{ relURL (.Site.Params.favicon | default "favicon.ico") }}" />
 {{ partial "opengraph.html" . }}
 <title>{{ $title }}</title>
-{{ partialCached "head/css.html" . }}
-{{ partialCached "head/js.html" . }}
 {{ with resources.Get "css/bootstrap.min.css" }}
   <link rel="stylesheet" href="{{ .RelPermalink }}" />
 {{ end }}
+{{ partialCached "head/css.html" . }}
+{{ partialCached "head/js.html" . }}

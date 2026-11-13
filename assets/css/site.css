@@ -1,25 +1,14 @@
-/* Site-level tweaks, loaded after the theme's main.css and palette
-   (see layouts/_partials/head/css.html override). Theme-agnostic: drop this
-   pair of files when switching themes unless still wanted. */
-
-/* Center images inside article content. not-much only centers <figure>
-   elements; markdown images render as bare <img>. */
 .post article img {
   display: block;
   margin-left: auto;
   margin-right: auto;
 }
 
-/* Center the italic caption line that directly follows an image. */
 .post article img + em {
   display: block;
   text-align: center;
 }
 
-/* Self-hosted fonts (files: static/fonts/). The @import lines in the
-   theme's main.css are stripped at build time
-   (see layouts/_partials/head/css.html). Literata is variable in
-   opsz+wght(weight 200–900), Red Hat Mono variable in wght (300–700). */
 @font-face {
   font-family: 'Literata';
   font-style: normal;
@@ -91,4 +80,19 @@
   src: url('/fonts/red-hat-mono-latin-ext-wght-italic.woff2') format('woff2-variations'),
        url('/fonts/red-hat-mono-latin-ext-wght-italic.woff2') format('woff2');
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+.navbar .navbar-toggler {
+  border: 0;
+}
+.navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23141414' stroke-width='2' stroke-linecap='round' stroke-miterlimit='10' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100%;
+}
+
+.row > .navbar {
+  padding-right: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
+  padding-left: calc(var(--bs-gutter-x, 1.5rem) * 0.5);
 }

@@ -1,12 +1,4 @@
-{{- /* Site-level override of not-much's baseof.html. Changes vs the theme:
-       1. Bootstrap JS is the vendored assets/js/bootstrap.bundle.min.js
-          (deferred) instead of cdn.jsdelivr.net. Rationale: visitors whose
-          network blocks the CDN (ad-block DNS lists, regional blocks) got a
-          silently dead hamburger menu (collapse JS is that single script),
-          and it removes the last third-party site request. The integrity/
-          crossorigin attrs are dropped (same-origin, checksummed by builds).
-       2. Removed the dead <!-- <header> --> comment block.
-       Everything else is byte-identical. Re-check when switching themes. */}}
+
 <!DOCTYPE html>
 <html lang="{{ or site.Language.Locale site.Language.Lang }}" dir="{{ or site.Language.Direction `ltr` }}">
 <head>
@@ -21,9 +13,6 @@
     class="dark"
   {{- end }}
 >
-  <!-- <header>
-    {{ partial "header.html" . }}
-  </header> -->
   <main>
     {{ block "main" . }}{{ end }}
   </main>
@@ -34,6 +23,19 @@
   {{ with resources.Get "js/bootstrap.bundle.min.js" }}
     <script src="{{ .RelPermalink }}" defer></script>
   {{ end }}
+  <script>
+    window.addEventListener("load", function () {
+      if (typeof window.bootstrap !== "undefined") return;
+      document.addEventListener("click", function (e) {
+        var t = e.target.closest(".navbar-toggler");
+        if (!t) return;
+        var d = document.getElementById("collapsibleMenu");
+        if (!d) return;
+        var open = d.classList.toggle("show");
+        t.setAttribute("aria-expanded", open ? "true" : "false");
+      });
+    });
+  </script>
   {{- if eq $theme "auto" }}
   <script>
     function detectThemePreferences() {
