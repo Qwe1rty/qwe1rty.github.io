@@ -1,0 +1,30 @@
+{{- /* Site-level override of not-much's layouts/taxonomy.html.
+       One-line change vs the theme original: term links use .RelPermalink
+       (relative) instead of .Page.Permalink (absolute) so the /tags/ index
+       stays on the current host in local preview (theme uses an absolute
+       production URL, which 404s until deployed).
+       Re-check when switching themes: delete this file unless the new theme
+       has the same absolute-URL behavior. */}}
+{{ define "main" }}
+<div class="container pt-5">
+    <div class="row mt-5 pt-5">
+        {{ partial "menu.html" (dict "menuID" "main" "page" .) }}
+    </div>
+
+    {{ $letters := split "ABCDEFGHIJKLMNOPQRSTUVWXYZ" "" }}
+    <div class="d-flex flex-column align-items-start">
+    {{ range sort .Site.Taxonomies.tags }}
+        <!-- This assumes the title is never empty -->
+        {{ $firstChar := substr .Page.Title 0 1 | upper }}
+        {{ if $firstChar | in $letters }}
+            {{ $curLetter := $.Scratch.Get "curLetter" }}
+            {{ if ne $firstChar $curLetter }}
+            {{ $.Scratch.Set "curLetter" $firstChar }}
+                <span class="terms-char pt-2 pb-1">{{ $firstChar }}</span>
+            {{ end }}
+            <a class="badge text-uppercase" href="{{ .Page.RelPermalink }}">{{ .Page.Title }} ({{ .Count }})</a>
+        {{ end }}
+    {{ end }}
+    </div>
+</div>
+{{ end }}

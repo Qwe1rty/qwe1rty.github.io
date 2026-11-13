@@ -1,0 +1,52 @@
+{{- /* Site-level override of not-much's layouts/_partials/head/css.html.
+       Identical to the theme original + one appended block that loads
+       assets/css/site.css (site tweaks, e.g. centered article images).
+       Re-check when switching themes: re-apply against the new theme's
+       css partial unless it already globs extra stylesheets. */}}
+{{- /* Site-level override of not-much's layouts/_partials/head/css.html.
+       Re-check when switching themes: re-apply both against the new theme's
+       css partial. */}}
+{{- with resources.Get "css/main.css" }}
+  {{- $css := replaceRE "(?m)^@import url\\('https://fonts\\.googleapis\\.com[^)]*\\);\\n?" "" .Content }}
+  {{- $main := resources.FromString "css/main-selfhosted.css" $css }}
+  {{- if eq hugo.Environment "development" }}
+    <link rel="stylesheet" href="{{ $main.RelPermalink }}">
+  {{- else }}
+    {{- with $main | minify | fingerprint }}
+      <link rel="stylesheet" href="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous">
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- with .Site.Params.palette }}
+  {{ $path := printf "css/palette/%s.css" . }}
+  {{- with resources.Get $path }}
+    {{- if eq hugo.Environment "development" }}
+      <link rel="stylesheet" href="{{ .RelPermalink }}">
+    {{- else }}
+      {{- with . | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous">
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- if not .Site.Params.palette }}
+  {{- with resources.Get "css/palette/default.css" }}
+    {{- if eq hugo.Environment "development" }}
+      <link rel="stylesheet" href="{{ .RelPermalink }}">
+    {{- else }}
+      {{- with . | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous">
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- /* Site tweaks stylesheet — loaded last so it can adjust theme styles. */}}
+{{- with resources.Get "css/site.css" }}
+  {{- if eq hugo.Environment "development" }}
+    <link rel="stylesheet" href="{{ .RelPermalink }}">
+  {{- else }}
+    {{- with . | minify | fingerprint }}
+      <link rel="stylesheet" href="{{ .RelPermalink }}" integrity="{{ .Data.Integrity }}" crossorigin="anonymous">
+    {{- end }}
+  {{- end }}
+{{- end }}

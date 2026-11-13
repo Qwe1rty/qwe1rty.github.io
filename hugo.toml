@@ -1,0 +1,49 @@
+baseURL = 'https://qwe1rty.github.io/'
+locale = 'en-us'
+title = 'qwe1rty.github.io'
+theme = 'not-much'
+copyright = 'qwe1rty © {year}'
+enableRobotsTXT = true
+disableHugoGeneratorInject = true
+
+defaultContentLanguage = 'en'
+
+[markup]
+  [markup.highlight]
+    style = 'dracula'
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = false
+
+[params]
+  theme = 'auto'          # auto: switch dark/light with system preference
+  palette = 'eink'        # alternates: default | dracula | solarized | catpuccin
+  showPostsSummary = true
+  showThemeNotice = false
+  tabTitle = 'Blog'       # browser-tab <title> prefix (head.html override)
+
+[menu]
+  [[menu.main]]
+    identifier = 'home'
+    name = 'home'
+    title = 'Home'
+    url = '/'
+    weight = 1
+
+  [[menu.main]]
+    identifier = 'posts'
+    name = 'posts'
+    title = 'Posts'
+    url = '/posts'
+    weight = 2
+
+  [[menu.main]]
+    identifier = 'github'
+    name = 'github'
+    title = 'GitHub'
+    url = 'https://github.com/Qwe1rty'
+    weight = 4
+
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'

@@ -1,0 +1,26 @@
+{{- /* Site-level override of not-much's layouts/home.html.
+       Change vs the theme original: the homepage h1 falls back to the page's
+       own title (content/_index.md front matter) instead of .Site.Title, so
+       it can say e.g. "About" while the browser-tab <title> and og: tags keep
+       showing the site name (those come from _partials/head.html, untouched).
+       Re-check when switching themes: delete this override unless needed. */}}
+{{ define "main" }}
+{{ $title := print .Site.Title " | " .Title}}
+{{ if .IsHome }}{{ $title = .Title }}{{ end }}
+<div class="container pt-5">
+    <div class="row mt-5 pt-5">
+        <div class="col-md-12">
+            {{ partial "menu.html" (dict "menuID" "main" "page" .) }}
+            <h1 class="display-3 text-uppercase lh-sm">{{ $title }}</h1>
+            {{ if isset .Params "lead" }}
+            <p class="lead pb-2">
+                <span class="underline">{{ .Params.lead }}</span>
+            </p>
+            {{ end }}
+            <section>
+                {{ .Content }}
+            </section>
+        </div>
+    </div>
+</div>
+{{ end }}

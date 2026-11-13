@@ -1,0 +1,49 @@
+{{- /* Site-level image render hook: bundle images get responsive webp variants
+       with srcset; remote/static images pass through untouched. Drop this file
+       (or adapt it) when changing themes. */}}
+{{- $u := urls.Parse .Destination }}
+{{- $img := false }}
+{{- if not $u.IsAbs }}
+  {{- $img = .Page.Resources.GetMatch (printf "*%s*" (path.Clean $u.Path)) }}
+{{- end }}
+{{- if $img }}
+  {{- if eq $img.MediaType.SubType "svg" }}
+    {{- /* Vector formats can't be resized or measured (no Width/Height methods
+           on non-raster resources) — serve as-is. */}}
+<img
+  src="{{ $img.RelPermalink }}"
+  alt="{{ .PlainText }}"
+  {{- with .Title }} title="{{ . }}"{{ end }}
+  loading="lazy" decoding="async">
+  {{- else }}
+  {{- $srcset := slice }}
+  {{- $default := false }}
+  {{- range slice 480 768 1024 }}
+    {{- if le . $img.Width }}
+      {{- $r := $img.Resize (printf "%dx webp q80" .) }}
+      {{- $srcset = $srcset | append (printf "%s %dw" $r.RelPermalink .) }}
+      {{- $default = $r }}
+    {{- end }}
+  {{- end }}
+  {{- /* Always offer the original as the largest srcset entry / fallback src. */}}
+  {{- $srcset = $srcset | append (printf "%s %dw" $img.RelPermalink $img.Width) }}
+  {{- if not $default }}{{ $default = $img }}{{ end }}
+<img
+  src="{{ $default.RelPermalink }}"
+  {{- with $srcset }}
+  srcset="{{ delimit . ", " }}"
+  sizes="(min-width: 768px) 768px, 100vw"
+  {{- end }}
+  width="{{ $img.Width }}"
+  height="{{ $img.Height }}"
+  alt="{{ .PlainText }}"
+  {{- with .Title }} title="{{ . }}"{{ end }}
+  loading="lazy" decoding="async">
+  {{- end }}
+{{- else }}
+<img
+  src="{{ .Destination | safeURL }}"
+  alt="{{ .PlainText }}"
+  {{- with .Title }} title="{{ . }}"{{ end }}
+  loading="lazy" decoding="async">
+{{- end }}

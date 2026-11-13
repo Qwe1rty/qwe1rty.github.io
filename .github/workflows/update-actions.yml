@@ -1,0 +1,100 @@
+# On-demand workflow-action updater (trigger only — no schedule).
+#
+# Actions tab → "Update pinned actions" → Run workflow.
+#
+# Resolves every action in .github/workflows/hugo.yaml to the latest
+# release's commit SHA. GITHUB_TOKEN can never push workflow-file changes
+# (no `workflow` scope exists for it), so when pins are stale this run
+# prints the diff to its summary and uploads a ready-to-apply patch:
+#
+#   gh run download <run-id> -n actions-bump && git apply actions-bump/*.patch
+#   (the run summary contains the exact command with the real run-id)
+#
+# Review the result, then commit+push yourself.
+name: Update pinned actions
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-action-pins
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Update action pins to latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re, pathlib, subprocess
+
+          WF_PATH = pathlib.Path(".github/workflows/hugo.yaml")
+          text = WF_PATH.read_text()
+
+          # matches:  uses: owner/repo@ref   (optionally with a "# vX" comment)
+          pattern = re.compile(
+              r"^(?P<pre>\s*(?:-\s*)?uses:\s*)"
+              r"(?P<repo>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)"
+              r"@(?P<ref>[^\s#]+)"
+              r"(?P<comment>\s*#\s*(?P<ver>v\d[0-9.]*)\s*)?$",
+              re.M,
+          )
+
+          def gh(path: str, jq: str) -> str:
+              return subprocess.run(
+                  ["gh", "api", path, "--jq", jq],
+                  capture_output=True, text=True, check=True,
+              ).stdout.strip()
+
+          changes = []
+          def repl(m: re.Match) -> str:
+              repo, ver = m.group("repo"), m.group("ver")
+              latest = gh(f"repos/{repo}/releases/latest", ".tag_name")
+              sha = gh(f"repos/{repo}/commits/{latest}", ".sha")
+              comment = f" # {latest}"
+              if m.group("ref") == sha and ver == latest:
+                  return m.group(0)  # already pinned to target
+              changes.append(f"{repo}: {ver or m.group('ref')[:12]} -> {latest}")
+              return f"{m.group('pre')}{repo}@{sha}{comment}"
+
+          updated = pattern.sub(repl, text)
+          WF_PATH.write_text(updated)
+          print("\n".join(changes) or "All action pins already up to date.")
+          PY
+
+      - name: Publish patch if pins changed
+        run: |
+          set -euo pipefail
+          WF=".github/workflows/hugo.yaml"
+          if git diff --quiet "$WF"; then
+            echo "No changes needed — all pins already match the latest releases."
+            exit 0
+          fi
+          git diff "$WF" > actions-bump.patch
+          cat actions-bump.patch
+          {
+            echo "## Pins are stale — apply the attached patch"
+            echo ""
+            echo 'A ready-to-apply patch is attached to this run as artifact **actions-bump** (also printed above). From the repo root:'
+            echo ""
+            echo '```sh'
+            echo "gh run download ${GITHUB_RUN_ID} --repo ${GITHUB_REPOSITORY} -n actions-bump"
+            echo 'git apply actions-bump/*.patch'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload patch artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: actions-bump
+          path: actions-bump.patch
+          if-no-files-found: ignore
