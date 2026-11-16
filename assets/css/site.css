@@ -1,3 +1,7 @@
+img {
+  height: auto;
+}
+
 .post article img {
   display: block;
   margin-left: auto;

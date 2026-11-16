@@ -10,7 +10,7 @@ defaultContentLanguage = 'en'
 
 [markup]
   [markup.highlight]
-    style = 'dracula'
+    style = 'catppuccin-frappe'
   [markup.goldmark]
     [markup.goldmark.renderer]
       unsafe = false

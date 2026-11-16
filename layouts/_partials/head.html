@@ -6,6 +6,8 @@
 <link rel="icon" href="{{ relURL (.Site.Params.favicon | default "favicon.ico") }}" />
 {{ partial "opengraph.html" . }}
 <title>{{ $title }}</title>
+<link rel="preload" as="font" type="font/woff2" href="{{ relURL "fonts/literata-latin-standard-normal.woff2" }}" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="{{ relURL "fonts/red-hat-mono-latin-wght-normal.woff2" }}" crossorigin>
 {{ with resources.Get "css/bootstrap.min.css" }}
   <link rel="stylesheet" href="{{ .RelPermalink }}" />
 {{ end }}
