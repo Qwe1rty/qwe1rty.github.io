@@ -50,12 +50,12 @@ Assuming storage servers are still up, this is true for snapshot reads but new o
 
 # What about dirty reads?
 
-It's not explicitly stated how transactions above DV are executed, and the question of dirty reads can come up given:
+It's not explicitly stated how transactions above `PEV` are executed, and the question of dirty reads can come up given:
 
-1. Recovery process can discard transactions above DV as they're not considered committed.
+1. Recovery process can discard transactions above `PEV` as they're not considered committed.
 2. Read-only transaction commits are effectively a client no-op
 
-If there are write transactions above DV, and you have a higher versioned read transaction, would that imply the possibility of dirty reads?
+If there are write transactions above `PEV`, and you have a higher versioned read transaction, would that imply the possibility of dirty reads?
 
 FDB prevents this by having the storage servers block these read requests until all transactions before it are committed first. They reach out to log servers to peek at what it's view of the commit version is. This is also described by the developers on the forum:[^2]
 

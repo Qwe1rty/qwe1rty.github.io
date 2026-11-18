@@ -5,6 +5,7 @@ draft = false
 description = 'How does decentralized consensus work?'
 summary = 'How does decentralized consensus work?'
 tags = ['databases']
+aliases = ['/posts/epaxos-and-decentralized-conflict-resolution/']
 +++
 
 Most production database systems use leader-based protocols for linearizability. But leaderless protocols are gaining popularity, like Tencent PaxosStore and the upcoming Cassandra 6.
